@@ -2,20 +2,20 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 #%% cfg
-model_name = "Qwen/Qwen2-7B-Instruct"
+model_name = "/home/zkding/projects/llm_model_resource/Qwen/Qwen2-7B-Instruct"
 device = "cuda" # the device to load the model onto
-cache_directory = "/home/zkding/projects/llm_model_resource/qwen2"
 
 #%% funcs
 def get_model(model_name:str=model_name):
     return AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype="auto",
-        device_map="auto", #device=device,
-        cache_dir=cache_directory,
+        device_map="auto", # device=device, # pip install accelerate
         trust_remote_code=True,
         force_download=False, # True: 强制重新下载模型的权重和配置文件，即使已经存在于缓存中的模型版本; False: 不重新下载
-        resume_download=False # True: 从头开始下载，即使部分文件已经存在; False: 从上次下载中断的地方继续下载
+        resume_download=False, # True: 从头开始下载，即使部分文件已经存在; False: 从上次下载中断的地方继续下载
+        # cache_dir=cache_directory,
+        # mirror="tuna",
     )
 
 def get_tokenizer(model_name:str=model_name):
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     print("start testing ...")
 
     #%% test
-    usr_query = "Give me a short introduction to large language model."
-    sys_prompt = "You are a helpful assistant."
+    usr_query = "请向我简要介绍大语言模型"
+    sys_prompt = "你是一个有用的智能助手"
     show_info = True
     test(usr_query, sys_prompt, show_info)

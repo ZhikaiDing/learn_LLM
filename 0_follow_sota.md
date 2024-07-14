@@ -8,6 +8,9 @@
 [tensorflow](https://www.tensorflow.org/)
 [tensorflow-cn](https://www.tensorflow.org/?hl=zh-cn)
 
+ - huggingface transformers
+[transformers](https://huggingface.co/docs/transformers/installation#offline-mode) 可选中文
+
  - 社区、讨论
    - github topics
 [深度学习](https://github.com/topics/deep-learning)
