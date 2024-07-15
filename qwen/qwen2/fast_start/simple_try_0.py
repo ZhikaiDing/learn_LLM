@@ -31,7 +31,7 @@ def messages_to_text(messages:list[dict], tokenizer=None):
     )
     return text
 
-def text_to_model_inputs(text:str, tokenizer=None):
+def text_to_model_inputs(text:str, tokenizer=None, device=device):
     if tokenizer is None:
         tokenizer = get_tokenizer()
     model_inputs = tokenizer([text], return_tensors="pt").to(device)
@@ -56,21 +56,30 @@ def generated_ids_to_text(generated_ids, tokenizer=None):
     return response
 
 def call_model(messages:list[dict], show_info = False, model=None, tokenizer=None):
+    # 1. 加载 模型 & tokenizer
     if model is None:
         if show_info: print("info | model name:", model_name)
         model = get_model()
     if tokenizer is None:
         tokenizer = get_tokenizer()
+ 
     
+    # 1. get input
+    # 2.1 msg(list[dict]) -> text(str)
     text = messages_to_text(messages, tokenizer)
     if show_info: print("info | text:", text)
 
+    # 2.2 text -> inputs
     model_inputs = text_to_model_inputs(text, tokenizer)
     if show_info: print("info | model_inputs:", model_inputs)
 
+
+    # 3. get output
+    # 3.1 inputs -> run model and get output ids
     generated_ids = model_generate(model_inputs, model)
     if show_info: print("info | generated_ids:", generated_ids)
 
+    # 3.2 decode to str
     response = generated_ids_to_text(generated_ids, tokenizer)
 
     return response
