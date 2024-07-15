@@ -1,7 +1,7 @@
 """一个创建服务的样例
  - 使用了 FastAPI, 采用 post 请求
  - 服务的 url = 'http://localhost:8000/v1/generate'
- - 记录日志(每次的输入输出), 保存在 finetune/io_file/output/log/fast_api_svc.log
+ - 记录日志(每次的输入输出), 保存在 fast_start/fast_api_svc.log
  - post - generate 函数的输入数据类型十分重要, 详见 Message 和 Messages 类
 """
 
@@ -54,7 +54,7 @@ model.eval()# 将模型置于评估模式，以减少内存消耗
 tokenizer = get_tokenizer()
 
 logger = setup_logger(
-    "/home/zkding/projects/coding/python/learn/learn_LLM/qwen/qwen2/finetune/io_file/output/log/fast_api_svc.log"
+    "/home/zkding/projects/coding/python/learn/learn_LLM/qwen/qwen2/fast_start/fast_api_svc.log"
 )
 
 #%% fast api

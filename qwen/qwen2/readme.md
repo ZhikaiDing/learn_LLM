@@ -17,6 +17,7 @@ fast_start/simple_try_0.py
 - 快速创建服务, 并请求
   - 创建服务: fast_start/simple_try_create_service.py
   - 请求: fast_start/try_call_service.py
+  - 请求后输出日志: fast_start/fast_api_svc.log
 
 ## 1.3 测试 function calling
 
@@ -99,7 +100,7 @@ OUTPUT_DIR - 输出位置
 --per_device_train_batch_size - 每个 GPU 用于训练的批次大小 ★
 --per_device_eval_batch_size - 每个 GPU 用于评估的批次大小
 --gradient_accumulation_steps - 梯度累积步数 ★
---eval_strategy - 要使用的评估策略
+--eval_strategy - 要使用的评估策略 | old: evaluation_strategy
 --save_strategy - 要使用的检查点保存策略 - transformers.TrainingArguments
 --save_steps - 每X个更新步骤保存一次检查点 - transformers.TrainingArguments
 --save_total_limit - 限制检查点的总数,删除中的旧检查点 - transformers.TrainingArguments
@@ -116,7 +117,7 @@ OUTPUT_DIR - 输出位置
 
 **注**: 
 (1) 总批次大小等于 per_device_train_batch_size × num_of_gpu × gradient_accumulation_steps
-(2) `evaluation_strategy` is deprecated and will be removed in version 4.46 of 🤗 Transformers. Use `eval_strategy` instead - transformers.TrainingArguments
+(2) 注意命令行参数: `evaluation_strategy` is deprecated and will be removed in version 4.46 of 🤗 Transformers. Use `eval_strategy` instead - transformers.TrainingArguments
 (3) 输入 --bf16 或 --fp16 可以指定混合精度训练的精度
 
   - finetune.py 内部参数
