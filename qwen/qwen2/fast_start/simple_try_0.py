@@ -6,8 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 model_name = "/home/zkding/projects/llm_model_resource/Qwen/Qwen2-7B-Instruct"
 device = "cuda" # the device to load the model onto
 
-functions_prompt = """
-# 工具列表:
+functions_prompt = """# 工具列表:
 __functions__
 # 要求
 - 无需调用函数时正常交互; 
@@ -34,7 +33,8 @@ def get_tokenizer(model_name:str=model_name):
 def function_list_to_messages(
         messages:list[dict], functions:list[dict]|str, role = "functions"
 ):
-    """尝试将"""
+    """尝试将函数定义列表添加到 system 角色的 prompt.
+     - ps: 我不确定官方做法是什么样的"""
     if not functions:
         return
 
@@ -45,7 +45,7 @@ def function_list_to_messages(
 
     content = functions_prompt.replace("__functions__", functions_str)
     if messages and messages[0]["role"] == "system":
-        messages[0]["content"] += content
+        messages[0]["content"] += "\n" +content
         return
     
     messages.insert(0, {"role":"system", "content":content})

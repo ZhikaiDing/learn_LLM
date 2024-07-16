@@ -1,5 +1,5 @@
 """ 一个样例, 用于请求服务
- - 需要先运行 simple_try_create_service.py
+ - 需要先运行 simple_try_create_service.py 启动 LLM 服务
  - 注意 post 请求的 data 格式, 形如: 
 {
     "messages": [
@@ -38,17 +38,14 @@ functions = [{
 }]
 
 #%% funcs
-def call_service(content:str, url=url, msg_to_str=False):
-    content = get_message1(content)
-    if msg_to_str:
-        # bad - 目前这种方式无法正确请求url - 无法正确传入输入 !!!
-        content = json.dumps(content,ensure_ascii=False)
-        print("warn | call_service() | messages(list[dict]) trans to str is not ok to requset url !!! \n\tPlease set msg_to_str=False !")
-    print("\nmessages:", content)
-
+def call_service(
+        messages:list[dict], 
+        functions:list[dict]=functions, 
+        url=url
+):
     data = {
-        "messages": content,
-        "functions": functions # json.dumps(functions, indent=None, ensure_ascii=False)
+        "messages": messages,
+        "functions": functions
     }
 
     response = requests.post(url, json=data)
@@ -59,11 +56,8 @@ def call_service(content:str, url=url, msg_to_str=False):
 
     return response.json()
 
-#%% main
-if __name__ == "__main__":
-    print("start testing ...")
-
-    msg_to_str = False
+#%% test call service
+def test_call_service():
     texts = [
         "你好",
         "What's the weather like in San Francisco?",
@@ -72,8 +66,18 @@ if __name__ == "__main__":
     ]
     for text in texts:
         print("input:",text)
-        response = call_service(text, msg_to_str=msg_to_str)
-        print("response:", response)
+        
+        messages = get_message1(text)
+        print("\nmessages:", messages)
+        
+        response = call_service(messages)
+        
+        print("\nresponse:", response)
         print("="*50)
 
+#%% main
+if __name__ == "__main__":
+    print("start testing ...")
+
     #%% test
+    test_call_service()

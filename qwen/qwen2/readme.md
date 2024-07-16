@@ -16,14 +16,45 @@
 
 ## 1.2 简单测试
 - 加载 torch 模型, 并简单使用
+
   fast_start/simple_try_0.py
 
 - 快速创建服务, 并请求
-  - 创建服务: fast_start/simple_try_create_service.py
-  - 请求: fast_start/try_call_service.py
-  - 请求后输出日志: fast_start/fast_api_svc.log
+  - 创建服务
+    
+    fast_start/simple_try_create_service.py 
+    采用了 FastAPI 启动服务, 采用 post 请求模式;
+    注意 generate() 的输入参数类型, 以及转换为输入数据的方式!!!
+
+  - 请求
+
+    fast_start/try_call_service.py 
+    使用 requests 模拟 post 请求
+
+  - 请求过程的日志: fast_start/fast_api_svc.log
 
 ## 1.3 测试 function calling
+- 参考文档
+
+  https://github.com/QwenLM/Qwen2/blob/main/docs/source/framework/function_call.rst
+  
+  https://github.com/QwenLM/Qwen2/blob/main/docs/source/framework/qwen_agent.rst
+
+  注: 这里提供的方式是高度封装的, 且需要自己启动服务
+
+- 简单模型调用: 同前 fast_start/simple_try_0.py
+  
+  注: 查看其中的: 全局变量 functions_prompt 和 函数 function_list_to_messages(). 
+  我不确定官方的做法, 因为需要查看 chat() 接口, 但我没找到模型源码.
+
+- 启动服务与简单请求: 同前
+
+## 1.4 CLI 模式测试
+try_cli_function_calling.py
+
+ - 需要先运行 simple_try_create_service.py 启动 LLM 服务
+ - 采用 while 循环, 输入 quit 退出
+ - 要点: 历史管理 | 解析模型输出 | 函数工具(声明|定义|调用)
 
 
 # 2. SFT
@@ -75,7 +106,7 @@ pip install peft deepspeed optimum accelerate
       <|im_start|>user
       你好<|im_end|>
       <|im_start|>assistant
-      
+
       ```
 
   - 关于特殊的 token 标记
