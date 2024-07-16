@@ -6,17 +6,19 @@
 """
 
 #%% import
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import uvicorn
 import json
 import logging
 from pydantic import BaseModel
+from typing import Dict, Any
 
 from simple_try_0 import \
     get_model, get_tokenizer, \
-    get_message1, messages_to_text, text_to_model_inputs, \
+    function_list_to_messages, get_message1, \
+    messages_to_text, text_to_model_inputs, \
     model_generate, generated_ids_to_text
 
 #%% funcs
@@ -58,32 +60,17 @@ logger = setup_logger(
 )
 
 #%% fast api
-# 输入数据类型定义 - 重要 !!!
-class Message(BaseModel):
-    role: str
-    content: str
-
-class Messages(BaseModel):
-    messages: list[Message]
-
-
 app = FastAPI(debug=False)
 @app.post("/v1/generate")
-async def generate(messages:str|Messages): # :Messages :str
+async def generate(request:Request):
+    data = await request.json()
+    
+    messages = data["messages"]
+    functions = data["functions"]
+    function_list_to_messages(messages, functions)
     logger.debug(messages)
-    
-    if type(messages) == Messages:
-        # 在这里使用 messages.messages，这是一个经过验证的列表
-        logger.debug("messages type: Messages")
-        text = messages_to_text(messages.messages, tokenizer)
-    elif type(messages) == str:
-        # 实际上目前无法正确传入 json 转成的 str 数据
-        logger.debug("messages type: str")
-        text = messages_to_text(json.loads(messages), tokenizer)
-    else:
-        logger.debug("messages type: UNK")
-        return {"result": "error | generate() | messages type error."}
-    
+
+    text = messages_to_text(messages, tokenizer)
     inputs = text_to_model_inputs(text, tokenizer)
     generated_ids = model_generate(inputs, model)
     response = generated_ids_to_text(generated_ids, tokenizer)

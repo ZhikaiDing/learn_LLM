@@ -1,9 +1,19 @@
 #%% import
+import json
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 #%% cfg
 model_name = "/home/zkding/projects/llm_model_resource/Qwen/Qwen2-7B-Instruct"
 device = "cuda" # the device to load the model onto
+
+functions_prompt = """
+# 工具列表:
+__functions__
+# 要求
+- 无需调用函数时正常交互; 
+- 需要调用函数时请严格返回 json, 
+  - 返回格式是 {"function_name": "get_current_weather", "arguments": {}},
+  - 未提到的非必须参数无需抽取."""
 
 #%% funcs
 def get_model(model_name:str=model_name):
@@ -20,6 +30,25 @@ def get_model(model_name:str=model_name):
 
 def get_tokenizer(model_name:str=model_name):
     return AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+
+def function_list_to_messages(
+        messages:list[dict], functions:list[dict]|str, role = "functions"
+):
+    """尝试将"""
+    if not functions:
+        return
+
+    if type(functions) == str:
+        functions_str = functions
+    else:
+        functions_str = json.dumps(functions, indent=4, ensure_ascii=False)
+
+    content = functions_prompt.replace("__functions__", functions_str)
+    if messages and messages[0]["role"] == "system":
+        messages[0]["content"] += content
+        return
+    
+    messages.insert(0, {"role":"system", "content":content})
 
 def messages_to_text(messages:list[dict], tokenizer=None):
     if tokenizer is None:
@@ -87,22 +116,25 @@ def call_model(messages:list[dict], show_info = False, model=None, tokenizer=Non
 #%% test funcs
 def get_message1(
         usr_query:str="Give me a short introduction to large language model.", 
-        sys_prompt:str="You are a helpful assistant."
+        sys_prompt:str="You are a helpful assistant.",
+        functions:list[dict] = None
 ):
     messages = [
         {"role": "system", "content": sys_prompt},
         {"role": "user", "content": usr_query}
     ]
+    function_list_to_messages(messages, functions)
     return messages
 
 def test(
         usr_query:str="Give me a short introduction to large language model.", 
         sys_prompt:str="You are a helpful assistant.",
+        functions:list[dict] = None,
         show_info = False
 ):
     print("sys_prompt:", sys_prompt)
     print("usr_query:", usr_query)
-    messages = get_message1(usr_query, sys_prompt)
+    messages = get_message1(usr_query, sys_prompt, functions)
     
     response = call_model(messages, show_info)
     print("response:", response)
@@ -114,7 +146,35 @@ if __name__ == "__main__":
     print("start testing ...")
 
     #%% test
-    usr_query = "请向我简要介绍大语言模型"
-    sys_prompt = "你是一个有用的智能助手"
+    functions = [{
+        'name': 'get_current_weather',
+        'description': 'Get the current weather in a given location',
+        'parameters': {
+            'type': 'object',
+            'properties': {
+                'location': {
+                    'type': 'string',
+                    'description':
+                    'The city and state, e.g. San Francisco, CA',
+                },
+                'unit': {
+                    'type': 'string',
+                    'enum': ['celsius', 'fahrenheit']
+                },
+            },
+            'required': ['location'],
+        },
+    }]
+
+    functions_str = json.dumps(functions, indent=4, ensure_ascii=False)
+
+    usr_query = "What's the weather like in San Francisco?" # "你好" # 
+    sys_prompt = "你是一个有用的智能助手。"
     show_info = True
-    test(usr_query, sys_prompt, show_info)
+    test(usr_query, sys_prompt, functions, show_info)
+
+
+    # # test functions into messages
+    # msgs = get_message1()
+    # function_list_to_messages(msgs, functions)
+    # print(msgs[0]["content"])

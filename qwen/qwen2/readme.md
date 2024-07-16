@@ -68,6 +68,16 @@ pip install peft deepspeed optimum accelerate
 
     为了引导模型进行输出, 一般以 <|im_start|>assistant\n 结尾
 
+    - eg
+      ```
+      <|im_start|>system
+      你是一个有用的智能助手<|im_end|>
+      <|im_start|>user
+      你好<|im_end|>
+      <|im_start|>assistant
+      
+      ```
+
   - 关于特殊的 token 标记
     查看模型仓库(Qwen/Qwen2-7B-Instruct)中的文件: tokenizer_config.json
 

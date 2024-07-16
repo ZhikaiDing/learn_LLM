@@ -32,7 +32,7 @@ def get_current_weather(location, unit='fahrenheit'):
 def test():
     llm = get_chat_model({
         # Use the model service provided by DashScope:
-        # 'model': model_name, #'qwen-max',
+        # 'model': 'qwen-max',
         # 'model_server': 'dashscope',
         # 'api_key': os.getenv('DASHSCOPE_API_KEY'),
 
