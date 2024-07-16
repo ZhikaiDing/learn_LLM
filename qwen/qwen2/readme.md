@@ -2,21 +2,21 @@
 ## 1.1 资源
 - 模型资源
 
-https://huggingface.co/Qwen/Qwen2-7B-Instruct/tree/main
+  https://huggingface.co/Qwen/Qwen2-7B-Instruct/tree/main
 
 - 脚本样例
 
-https://github.com/QwenLM/Qwen2
+  https://github.com/QwenLM/Qwen2
 
 - 文档
 
-https://qwenlm.github.io/zh/blog/qwen2/
+  https://qwenlm.github.io/zh/blog/qwen2/
 
-https://qwen.readthedocs.io/en/latest/
+  https://qwen.readthedocs.io/en/latest/
 
 ## 1.2 简单测试
 - 加载 torch 模型, 并简单使用
-fast_start/simple_try_0.py
+  fast_start/simple_try_0.py
 
 - 快速创建服务, 并请求
   - 创建服务: fast_start/simple_try_create_service.py
@@ -43,11 +43,11 @@ pip install peft deepspeed optimum accelerate
     - json 数据
       - 普通数据
 
-      finetune/io_file/input_data/example_one_data.json
+        finetune/io_file/input_data/example_one_data.json
 
       - function calling 数据 ???
 
-      finetune/io_file/input_data/example_one_functioncall_data.json - **empty now**
+        finetune/io_file/input_data/example_one_functioncall_data.json - **empty now**
 
 - 深入解析
   - 角色
