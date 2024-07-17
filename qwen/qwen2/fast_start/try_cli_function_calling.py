@@ -106,7 +106,11 @@ functions = [
 
 # define
 def fake_get_current_weather(location, unit='celsius'):
-    """Get the current weather in a given location"""
+    """模拟 天气查询 接口.
+    
+    - 20% 概率查不到结果
+    - 80% 概率随机生成一个 -20 到 40 之间的 摄氏度 (float)
+    - unit 是华氏度时, 将 摄氏度 转换为 华氏度"""
     ret_js = {
         "location": location,
         "temperature": "unknown",
@@ -128,6 +132,7 @@ def fake_get_current_weather(location, unit='celsius'):
     return json.dumps(ret_js, ensure_ascii=False)
 
 def fake_draw_pic(prompt):
+    """模拟画图"""
     prompt = urllib.parse.quote(prompt)
     ret_js = {'image_url': f'https://image.pollinations.ai/prompt/{prompt}'}
     return json.dumps(ret_js, ensure_ascii=False)

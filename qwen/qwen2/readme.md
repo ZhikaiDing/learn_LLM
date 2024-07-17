@@ -55,7 +55,7 @@
   try_cli_function_calling.py - 使用 CLI (命令行交互) 的模式 测试 function call, 符合实际交互过程中回调第三方或其他工具
 
    - 需要先运行 simple_try_create_service.py 启动 LLM 服务
-   - 采用 while 循环, 输入 quit 退出
+   - 采用 while 循环, 输入 quit 退出, clear 清空对话历史
    - 要点: 历史管理 | 解析模型输出 | 函数工具(声明|定义|调用)
 
 - 日志
