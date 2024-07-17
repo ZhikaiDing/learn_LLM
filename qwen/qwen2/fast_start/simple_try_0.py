@@ -11,7 +11,7 @@ __functions__
 # 要求
 - 无需调用函数时正常交互; 
 - 需要调用函数时请严格返回 json, 
-  - 返回格式是 {"function_name": "get_current_weather", "arguments": {}},
+  - 返回格式是 {"function_name": "xxx", "arguments": {}},
   - 未提到的非必须参数无需抽取."""
 
 #%% funcs

@@ -1,6 +1,6 @@
 """ 一个样例, 模拟 CLI 模型交互
  - 需要先运行 simple_try_create_service.py 启动 LLM 服务
- - 采用 while 循环, 输入 quit 退出
+ - 采用 while 循环, 输入 quit 退出, clear 清空对话历史
  - 要点: 历史管理 | 解析模型输出 | 函数工具(声明|定义|调用)
 """
 
@@ -12,12 +12,17 @@ import urllib.parse
 from try_call_service import call_service
 
 #%% roles
-# system user assistant observation
+SYS_ROLE = "system"
+USR_ROLE = "user"
+MODEL_ROLE = "assistant"
+
+FUNC_CALL_ROLE = "call_function"
+FUNC_RSLT_ROLE = "function_return"
 
 #%% cfg
 url = 'http://localhost:8000/v1/generate'
 
-system_prompt = "You are a helpful assistant."
+system_prompt = "你是一个智能助手，根据交互历史进行回复或调用函数。"
 
 #%% com funcs
 def try_parse_str_to_json(assistant_answer:str):
@@ -52,12 +57,15 @@ class HistManager:
         ret = self._hist[-1]
         del self._hist[-1]
         return ret
+    
+    def clear(self):
+        self._hist.clear()
 
     def get_hist(self):
         return self._hist
     
     def get_messages(self, sys_prompt):
-        return [{"role":"system", "content":sys_prompt}] + self._hist
+        return [{"role":SYS_ROLE, "content":sys_prompt}] + self._hist
 
 #%% functions
 # declare
@@ -131,81 +139,131 @@ FUNCTIONS = {
 }
 
 #%% CLI demo
-def CLI_demo(debug=False):
+def CLI_demo(debug=False, show_function_call=True):
     hist = HistManager()
     messages = []
+    
+    mode = "input" # input, call_func, call_model
+    params = {} # 初始化函数参数
 
     while True:
-        if debug: print("===> history", hist.get_hist())
+        if debug: print("\n===> history", hist.get_hist())
 
-        # 1. 用户输入
-        usr_prompt = input("\n(input 'quit' to quit) user: ")
+        if mode == "input":
+            # 1. user input
+            # 1.1 输入
+            usr_prompt = input(f"\n('quit' to quit, 'clear' to clear history) {USR_ROLE}: ")
+            if not usr_prompt:
+                continue
+            
+            # 1.2 特殊操作
+            if usr_prompt.lower() == 'quit':
+                # 退出
+                break
+
+            if usr_prompt.lower() == 'clear':
+                # 清空交互历史
+                hist.clear()
+                continue
+
+            # 1.3 添加历史: 函数的返回
+            hist.add(USR_ROLE, usr_prompt)
+
+            # 1.4 模式切换 - 用户输入之后 需要调用模型
+            mode = "call_model"
         
-        # 2. 退出交互
-        if usr_prompt.lower() == 'quit':
-            break
-        
-        # 添加历史: 用户输入
-        hist.add("user", usr_prompt)
+        elif mode == "call_func":
+            # 2. try call function
+            try:
+                # 2.1 调用函数
+                func_rslt = FUNCTIONS[function_name](**params)
+                if show_function_call:
+                    print(f"info | call function | {function_name}(**{params}) | return:",func_rslt)
 
-        # 3. 生成 messages 列表
-        messages = hist.get_messages(system_prompt)
+            except:
+                func_rslt = {
+                    "info": "Call function failed !!!",
+                    "function_name": function_name,
+                    "params": params
+                }
+                func_rslt = json.dumps(func_rslt, ensure_ascii=False)
+            
+            # 2.2 添加历史: 函数的调用&返回
+            hist.add(FUNC_CALL_ROLE, f"{function_name}(**{params})")
+            hist.add(FUNC_RSLT_ROLE, func_rslt)
+            
+            # 2.3 模式切换 - 获取函数调用结果之后 需要调用模型
+            mode = "call_model"
 
-        # 4. 请求 LLM (qwen2-Instruct) 服务
-        response = call_service(messages, functions, url)
-        if type(response) != dict or "result" not in response:
-            print("warn | bad response:", response)
-            continue
-        
-        # 5. 获取 LLM 回复
-        assistant_answer = response["result"]
+        elif mode == "call_model":
+            # 3. 请求模型
+            # 3.1 请求
+            messages = hist.get_messages(system_prompt)
+            response = call_service(messages, functions, url)
+            
+            # 3.2 获取模型回复
+            if type(response) != dict or "result" not in response:
+                # 请求失败
+                assistant_answer = "get model response failed."
+                print("warn | bad response:", response)
+            else:
+                # 请求成功
+                assistant_answer = response["result"]
+            
+            # 解析模型回复
+            if debug: print("debug | org assistant_answer:", assistant_answer)
+            parsed_answer = try_parse_str_to_json(assistant_answer)
+            if debug: print("debug | parsed_answer:", parsed_answer)
 
-        # 添加历史: 模型回复
-        hist.add("assistant", assistant_answer)
 
-        # 6. 解析模型回复
-        assistant_answer = try_parse_str_to_json(assistant_answer)
-        
-        # 7. try call function
-        if type(assistant_answer) == dict:
-            function_name = assistant_answer.get("function_name", "")
+            # 3.3 普通回复
+            if type(parsed_answer) != dict:
+                print(f"{MODEL_ROLE}:", assistant_answer)
+                hist.add(MODEL_ROLE, assistant_answer)
+                # 模式切换 - 模型回复完成后 需要用户继续输入
+                mode = "input"
+                continue
+
+            # 3.4 判断是否需要进行函数调用
+            # 3.4.1 判断函数名
+            function_name = parsed_answer.get("function_name", "")
             if not function_name:
+                # json 不符合 function calling 的格式 - 很可能是 普通回复
+                print(f"{MODEL_ROLE}:", assistant_answer) # 打印回复内容
+                hist.add(MODEL_ROLE, assistant_answer)
+                
+                # 模式切换 - 模型回复完成后 需要用户继续输入
+                mode = "input"
+                
                 continue
             
             if function_name not in FUNCTIONS:
+                # 函数名未知 - 可能是 普通回复
                 if debug: print("debug | unk function name:", function_name)
+                print(f"{MODEL_ROLE}:", assistant_answer) # 打印回复内容
+                hist.add(MODEL_ROLE, assistant_answer)
+                
+                # 模式切换 - 模型回复完成后 需要用户继续输入
+                mode = "input"
+                
                 continue
             
-            params = assistant_answer.get("arguments", {})
+            # 3.4.2 获取参数列表
+            params = parsed_answer.get("arguments", {})
             if type(params) != dict:
                 params = try_parse_str_to_json(params)
+                
                 if type(params) != dict:
-                    if debug: print("debug | load arguments failed:", params)
+                    # 加载参数列表失败
+                    print("warn | load arguments failed | arguments:", params)
                     params = {}
             
-            try:
-                # 7.1 调用函数
-                func_rslt = FUNCTIONS[function_name](**params)
-
-                # 添加历史: 函数返回
-                hist.add("observation", func_rslt)
-
-                # 7.2 结合函数返回 进行回复
-                messages = hist.get_messages(system_prompt)
-                response = call_service(messages, functions, url)
-                if type(response) != dict or "result" not in response:
-                    print("warn | bad response:", response)
-                    continue
-                assistant_answer = response["result"]
-                hist.add("assistant", assistant_answer)
-            
-            except:
-                if debug: print(f"debug | call function failed | function_name: {function_name}, params: {params}")
-                continue
-        
-        # 8. 显示模型回复
-        print("assistant:", assistant_answer)
+            # 模式切换 - 确实需要调用函数
+            mode = "call_func"
 
 #%% main
 if __name__ == "__main__":
-    CLI_demo(debug=False)
+    CLI_demo(
+        debug=False, 
+        show_function_call=True
+    )

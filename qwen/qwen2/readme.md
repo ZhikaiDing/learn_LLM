@@ -50,11 +50,17 @@
 - 启动服务并请求 来测试 function call: 同前
 
 ## 1.4 CLI 模式测试
-try_cli_function_calling.py - 使用 CLI (命令行交互) 的模式 测试 function call, 符合实际交互过程中回调第三方或其他工具
+- 脚本
 
- - 需要先运行 simple_try_create_service.py 启动 LLM 服务
- - 采用 while 循环, 输入 quit 退出
- - 要点: 历史管理 | 解析模型输出 | 函数工具(声明|定义|调用)
+  try_cli_function_calling.py - 使用 CLI (命令行交互) 的模式 测试 function call, 符合实际交互过程中回调第三方或其他工具
+
+   - 需要先运行 simple_try_create_service.py 启动 LLM 服务
+   - 采用 while 循环, 输入 quit 退出
+   - 要点: 历史管理 | 解析模型输出 | 函数工具(声明|定义|调用)
+
+- 日志
+  - 日志保存在: fast_start/fast_api_svc.log
+  - bad case 记录: 文件夹 fast_start/bad_case/ 下有详细内容
 
 
 # 2. SFT

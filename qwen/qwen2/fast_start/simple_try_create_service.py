@@ -68,33 +68,19 @@ async def generate(request:Request):
     messages = data["messages"]
     functions = data["functions"]
     function_list_to_messages(messages, functions)
-    logger.debug(messages)
+    # logger.debug(messages)
 
     text = messages_to_text(messages, tokenizer)
+    logger.debug(f"input text: {text}")
     inputs = text_to_model_inputs(text, tokenizer)
     generated_ids = model_generate(inputs, model)
     response = generated_ids_to_text(generated_ids, tokenizer)
 
-    logger.debug(response)
+    logger.debug(f"model answer: {response}")
     logger.debug("="*80)
     return {"result": response}
 
 #%% test funcs
-def test():
-    def test_generate(messages:str):
-        logger.debug(messages)
-        if type(messages) == str:
-            messages = json.loads(messages)
-        text = messages_to_text(messages, tokenizer)
-        inputs = text_to_model_inputs(text, tokenizer)
-        generated_ids = model_generate(inputs, model)
-        response = generated_ids_to_text(generated_ids, tokenizer)
-        return {"result": response}
-    
-    messages = get_message1("你好")
-    messages = json.dumps(messages, ensure_ascii=False)
-    rslt = test_generate(messages)
-    print(rslt)
 
 #%% run demo
 def setup_service():
@@ -107,4 +93,3 @@ if __name__ == "__main__":
     setup_service()
 
     #%% test
-    # test()
